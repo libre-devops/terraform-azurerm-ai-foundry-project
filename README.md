@@ -126,13 +126,14 @@ The Requirements, Providers, Inputs, Outputs, and Resources below are generated 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0, < 2.0.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.60.0, < 5.0.0 |
+| <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | >= 2.0.0, < 3.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.0.0, < 5.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.60.0, < 5.0.0 |
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | >= 2.0.0, < 3.0.0 |
 
 ## Modules
 
@@ -142,15 +143,17 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_cognitive_account_project.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account_project) | resource |
+| [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_api_version"></a> [api\_version](#input\_api\_version) | Microsoft.CognitiveServices/accounts/projects API version used by the azapi resource. The default is a stable version azapi can schema-validate; newer versions may need schema\_validation\_enabled = false. | `string` | `"2025-09-01"` | no |
 | <a name="input_cognitive_account_id"></a> [cognitive\_account\_id](#input\_cognitive\_account\_id) | Resource id of the parent AIServices Cognitive account (the Azure AI Foundry account) these<br/>projects are created under. The account must have kind = AIServices, project\_management\_enabled =<br/>true, a managed identity, and a custom subdomain (all set by the cognitive-account module). The<br/>resource group and subscription are parsed from this id. | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Azure region for the projects. Must match the parent account's region. | `string` | n/a | yes |
 | <a name="input_projects"></a> [projects](#input\_projects) | Azure AI Foundry projects to create under the account, keyed by project name. Each project is an<br/>isolated workspace with its own identity, model deployments, connections, and data. Fields:<br/>  display\_name   Friendly name shown in the Foundry portal (defaults to the project name).<br/>  description    Free-text description.<br/>  identity       Managed identity for the project (SystemAssigned by default).<br/>  tags           Per-project tags (falls back to the module tags when null). | <pre>map(object({<br/>    display_name = optional(string)<br/>    description  = optional(string)<br/>    tags         = optional(map(string))<br/>    identity = optional(object({<br/>      type         = optional(string, "SystemAssigned")<br/>      identity_ids = optional(list(string))<br/>    }), {})<br/>  }))</pre> | `{}` | no |
+| <a name="input_schema_validation_enabled"></a> [schema\_validation\_enabled](#input\_schema\_validation\_enabled) | Whether azapi validates the request body against its embedded schema. Keep true with the default api\_version; set false if you pin an api\_version newer than the azapi provider knows. | `bool` | `true` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags applied to the projects (unless a project sets its own). | `map(string)` | `{}` | no |
 
 ## Outputs
@@ -162,7 +165,6 @@ No modules.
 | <a name="output_identities"></a> [identities](#output\_identities) | Map of project name to its managed identity { principal\_id, tenant\_id } (principal\_id is populated for system-assigned identities). |
 | <a name="output_ids"></a> [ids](#output\_ids) | Map of project name to its resource id. |
 | <a name="output_ids_zipmap"></a> [ids\_zipmap](#output\_ids\_zipmap) | Map of project name to a { name, id } object, for passing where both are needed together. |
-| <a name="output_is_default"></a> [is\_default](#output\_is\_default) | Map of project name to whether it is the account's default project. |
 | <a name="output_names"></a> [names](#output\_names) | The project names. |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | Resource group name parsed from cognitive\_account\_id. |
 | <a name="output_subscription_id"></a> [subscription\_id](#output\_subscription\_id) | Subscription id parsed from cognitive\_account\_id. |

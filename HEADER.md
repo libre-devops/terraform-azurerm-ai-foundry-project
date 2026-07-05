@@ -41,6 +41,12 @@ a managed identity, and a custom subdomain. The Libre DevOps
 module sets all of those, so the usual pattern is to create the account with that module and pass its
 id to this one. The account id is parsed for the resource group and subscription.
 
+> The project is managed with **azapi** (`azapi_resource`), not `azurerm_cognitive_account_project`.
+> That azurerm resource's delete sends an ETag `If-Match` precondition, and the Foundry account keeps
+> reconciling the project's ETag, so a delete shortly after create fails with
+> `412 IfMatchPreconditionFailed`. azapi's unconditional delete is reliable. The module interface and
+> outputs are unchanged.
+
 ## Usage
 
 ```hcl

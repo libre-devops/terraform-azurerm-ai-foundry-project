@@ -1,7 +1,8 @@
-# Plan-time tests for the module. The azurerm provider is mocked, so no credentials, no
-# features block, and no cloud calls are needed:
+# Plan-time tests for the module. The providers are mocked, so no credentials, no features block,
+# and no cloud calls are needed:
 #   terraform init -backend=false && terraform test
 
+mock_provider "azapi" {}
 mock_provider "azurerm" {}
 
 variables {
@@ -15,27 +16,32 @@ variables {
   }
 }
 
-# A project is created under the account with a system-assigned identity by default.
+# A project is created under the account (via azapi) with a system-assigned identity by default.
 run "creates_project" {
   command = plan
 
   assert {
-    condition     = azurerm_cognitive_account_project.this["aifp-ldo-uks-tst-01"].cognitive_account_id == var.cognitive_account_id
-    error_message = "The project should be attached to the supplied cognitive account."
+    condition     = azapi_resource.this["aifp-ldo-uks-tst-01"].parent_id == var.cognitive_account_id
+    error_message = "The project should be parented to the supplied cognitive account."
   }
 
   assert {
-    condition     = azurerm_cognitive_account_project.this["aifp-ldo-uks-tst-01"].location == "uksouth"
+    condition     = azapi_resource.this["aifp-ldo-uks-tst-01"].location == "uksouth"
     error_message = "The project should be created in the requested location."
   }
 
   assert {
-    condition     = azurerm_cognitive_account_project.this["aifp-ldo-uks-tst-01"].identity[0].type == "SystemAssigned"
+    condition     = startswith(azapi_resource.this["aifp-ldo-uks-tst-01"].type, "Microsoft.CognitiveServices/accounts/projects@")
+    error_message = "The project should be the CognitiveServices accounts/projects azapi type."
+  }
+
+  assert {
+    condition     = azapi_resource.this["aifp-ldo-uks-tst-01"].identity[0].type == "SystemAssigned"
     error_message = "The project should get a system-assigned identity by default."
   }
 
   assert {
-    condition     = length(azurerm_cognitive_account_project.this) == 1
+    condition     = length(azapi_resource.this) == 1
     error_message = "One project should be created per map entry."
   }
 }

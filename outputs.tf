@@ -1,34 +1,29 @@
 output "ids" {
   description = "Map of project name to its resource id."
-  value       = { for k, v in azurerm_cognitive_account_project.this : k => v.id }
+  value       = { for k, v in azapi_resource.this : k => v.id }
 }
 
 output "ids_zipmap" {
   description = "Map of project name to a { name, id } object, for passing where both are needed together."
-  value       = { for k, v in azurerm_cognitive_account_project.this : k => { name = v.name, id = v.id } }
+  value       = { for k, v in azapi_resource.this : k => { name = v.name, id = v.id } }
 }
 
 output "names" {
   description = "The project names."
-  value       = keys(azurerm_cognitive_account_project.this)
+  value       = keys(azapi_resource.this)
 }
 
 output "endpoints" {
   description = "Map of project name to its endpoints map (the per-project Foundry endpoints)."
-  value       = { for k, v in azurerm_cognitive_account_project.this : k => v.endpoints }
-}
-
-output "is_default" {
-  description = "Map of project name to whether it is the account's default project."
-  value       = { for k, v in azurerm_cognitive_account_project.this : k => v.default }
+  value       = { for k, v in azapi_resource.this : k => try(v.output.properties.endpoints, {}) }
 }
 
 output "identities" {
   description = "Map of project name to its managed identity { principal_id, tenant_id } (principal_id is populated for system-assigned identities)."
   value = {
-    for k, v in azurerm_cognitive_account_project.this : k => try({
-      principal_id = v.identity[0].principal_id
-      tenant_id    = v.identity[0].tenant_id
+    for k, v in azapi_resource.this : k => try({
+      principal_id = v.output.identity.principalId
+      tenant_id    = v.output.identity.tenantId
     }, null)
   }
 }

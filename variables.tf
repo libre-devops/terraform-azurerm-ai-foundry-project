@@ -13,6 +13,18 @@ variable "cognitive_account_id" {
   }
 }
 
+variable "api_version" {
+  description = "Microsoft.CognitiveServices/accounts/projects API version used by the azapi resource. The default is a stable version azapi can schema-validate; newer versions may need schema_validation_enabled = false."
+  type        = string
+  default     = "2025-09-01"
+}
+
+variable "schema_validation_enabled" {
+  description = "Whether azapi validates the request body against its embedded schema. Keep true with the default api_version; set false if you pin an api_version newer than the azapi provider knows."
+  type        = bool
+  default     = true
+}
+
 variable "location" {
   description = "Azure region for the projects. Must match the parent account's region."
   type        = string
