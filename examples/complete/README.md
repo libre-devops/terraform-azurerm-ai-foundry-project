@@ -28,6 +28,7 @@ locals {
   location  = lookup(var.regions, var.loc, "uksouth")
   rg_name   = "rg-${var.short}-${var.loc}-${terraform.workspace}-002"
   ais_name  = "ais-${var.short}-${var.loc}-${terraform.workspace}-002"
+  srch_name = "srch-${var.short}-${var.loc}-${terraform.workspace}-002"
   proj_rag  = "aifp-${var.short}-${var.loc}-${terraform.workspace}-002"
   proj_eval = "aifp-${var.short}-${var.loc}-${terraform.workspace}-003"
 }
@@ -51,8 +52,11 @@ module "rg" {
   resource_groups = [{ name = local.rg_name, location = local.location, tags = module.tags.tags }]
 }
 
-# The parent Azure AI Foundry (AIServices) account, with project management enabled and a small chat
-# deployment the projects can share.
+# Complete call: a full RAG-style composition of the three AI modules. The Foundry account holds the
+# models, the search service is the retrieval index, and the Foundry projects are the agent
+# workspaces. The RAG project's identity is granted read access to the search index to wire them up.
+
+# 1. The Azure AI Foundry (AIServices) account with project management and a small chat deployment.
 module "cognitive_account" {
   source  = "libre-devops/cognitive-account/azurerm"
   version = "~> 4.0"
@@ -76,7 +80,25 @@ module "cognitive_account" {
   }
 }
 
-# Complete call: two projects on the account, each with a display name, description, and identity.
+# 2. The Azure AI Search service (retrieval side of RAG).
+module "search_service" {
+  source  = "libre-devops/search-service/azurerm"
+  version = "~> 4.0"
+
+  resource_group_id = module.rg.ids[local.rg_name]
+  location          = local.location
+  tags              = module.tags.tags
+
+  search_services = {
+    (local.srch_name) = {
+      sku                 = "basic"
+      semantic_search_sku = "free"
+      identity            = { type = "SystemAssigned" }
+    }
+  }
+}
+
+# 3. The Foundry projects on the account: a RAG agent workspace and an evaluations workspace.
 module "ai_foundry_project" {
   source = "../../"
 
@@ -87,13 +109,27 @@ module "ai_foundry_project" {
   projects = {
     (local.proj_rag) = {
       display_name = "Retrieval agent"
-      description  = "RAG agent project with its own connections and data."
+      description  = "RAG agent project; reads the search index below."
       identity     = { type = "SystemAssigned" }
     }
     (local.proj_eval) = {
       display_name = "Evaluations"
       description  = "Offline evaluation and red-teaming workspace."
       identity     = { type = "SystemAssigned" }
+    }
+  }
+}
+
+# 4. Wire them up: grant the RAG project's managed identity read access to the search index.
+module "rag_role_assignment" {
+  source  = "libre-devops/role-assignment/azurerm"
+  version = "~> 4.0"
+
+  role_assignments = {
+    "rag-project-reads-search" = {
+      scope         = module.search_service.ids[local.srch_name]
+      principal_ids = [module.ai_foundry_project.identities[local.proj_rag].principal_id]
+      role_names    = ["Search Index Data Reader"]
     }
   }
 }
@@ -116,7 +152,9 @@ No providers.
 |------|--------|---------|
 | <a name="module_ai_foundry_project"></a> [ai\_foundry\_project](#module\_ai\_foundry\_project) | ../../ | n/a |
 | <a name="module_cognitive_account"></a> [cognitive\_account](#module\_cognitive\_account) | libre-devops/cognitive-account/azurerm | ~> 4.0 |
+| <a name="module_rag_role_assignment"></a> [rag\_role\_assignment](#module\_rag\_role\_assignment) | libre-devops/role-assignment/azurerm | ~> 4.0 |
 | <a name="module_rg"></a> [rg](#module\_rg) | libre-devops/rg/azurerm | ~> 4.0 |
+| <a name="module_search_service"></a> [search\_service](#module\_search\_service) | libre-devops/search-service/azurerm | ~> 4.0 |
 | <a name="module_tags"></a> [tags](#module\_tags) | libre-devops/tags/azurerm | ~> 4.0 |
 
 ## Resources
@@ -137,7 +175,7 @@ No resources.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_account_id"></a> [account\_id](#output\_account\_id) | Parent Foundry account id. |
-| <a name="output_project_endpoints"></a> [project\_endpoints](#output\_project\_endpoints) | Map of project name to its endpoints. |
+| <a name="output_account_id"></a> [account\_id](#output\_account\_id) | The Foundry (AIServices) account id. |
 | <a name="output_project_ids"></a> [project\_ids](#output\_project\_ids) | Map of project name to resource id. |
+| <a name="output_search_service_id"></a> [search\_service\_id](#output\_search\_service\_id) | The search service id the RAG project can read. |
 <!-- END_TF_DOCS -->

@@ -80,8 +80,9 @@ module "ai_foundry_project" {
 ## Examples
 
 - [`examples/minimal`](./examples/minimal) - one Foundry account and a single project on it.
-- [`examples/complete`](./examples/complete) - one Foundry account with two projects, each with a
-  display name, description, and system-assigned identity.
+- [`examples/complete`](./examples/complete) - the full 3-module RAG composition: a Foundry account
+  (with a chat deployment), an Azure AI Search service, two projects, and a role assignment granting
+  the RAG project's identity read access to the search index.
 
 ## Developing
 
