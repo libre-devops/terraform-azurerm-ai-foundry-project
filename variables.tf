@@ -1,3 +1,9 @@
+variable "api_version" {
+  description = "Microsoft.CognitiveServices/accounts/projects API version used by the azapi resource. The default is a stable version azapi can schema-validate; newer versions may need schema_validation_enabled = false."
+  type        = string
+  default     = "2025-09-01"
+}
+
 variable "cognitive_account_id" {
   description = <<-EOT
     Resource id of the parent AIServices Cognitive account (the Azure AI Foundry account) these
@@ -11,18 +17,6 @@ variable "cognitive_account_id" {
     condition     = try(provider::azurerm::parse_resource_id(var.cognitive_account_id).resource_type, "") == "accounts"
     error_message = "cognitive_account_id must be a Microsoft.CognitiveServices/accounts resource id."
   }
-}
-
-variable "api_version" {
-  description = "Microsoft.CognitiveServices/accounts/projects API version used by the azapi resource. The default is a stable version azapi can schema-validate; newer versions may need schema_validation_enabled = false."
-  type        = string
-  default     = "2025-09-01"
-}
-
-variable "schema_validation_enabled" {
-  description = "Whether azapi validates the request body against its embedded schema. Keep true with the default api_version; set false if you pin an api_version newer than the azapi provider knows."
-  type        = bool
-  default     = true
 }
 
 variable "location" {
@@ -57,6 +51,12 @@ variable "projects" {
     ])
     error_message = "identity.type must be SystemAssigned, UserAssigned, or \"SystemAssigned, UserAssigned\"."
   }
+}
+
+variable "schema_validation_enabled" {
+  description = "Whether azapi validates the request body against its embedded schema. Keep true with the default api_version; set false if you pin an api_version newer than the azapi provider knows."
+  type        = bool
+  default     = true
 }
 
 variable "tags" {

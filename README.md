@@ -41,6 +41,16 @@ a managed identity, and a custom subdomain. The Libre DevOps
 module sets all of those, so the usual pattern is to create the account with that module and pass its
 id to this one. The account id is parsed for the resource group and subscription.
 
+> The project is managed with **azapi** (`azapi_resource`), not `azurerm_cognitive_account_project`.
+> The Cognitive Services RP's project delete is an async cascade that does its own ETag-conditional
+> writes, and the Foundry account keeps reconciling the project, so a delete soon after create can
+> fail with `412 IfMatchPreconditionFailed` no matter which client sends it
+> ([azurerm#32614](https://github.com/hashicorp/terraform-provider-azurerm/issues/32614)). azapi lets
+> the module absorb it the same way Microsoft's
+> [AVM AI Foundry pattern module](https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-ai-foundry)
+> does: a wildcard `If-Match` on delete plus a retry on that error until it lands. The module
+> interface and outputs are unchanged.
+
 ## Usage
 
 ```hcl
@@ -80,8 +90,8 @@ module "ai_foundry_project" {
 ## Examples
 
 - [`examples/minimal`](./examples/minimal) - one Foundry account and a single project on it.
-- [`examples/complete`](./examples/complete) - one Foundry account with two projects, each with a
-  display name, description, and system-assigned identity.
+- [`examples/complete`](./examples/complete) - a Foundry account with a chat deployment and two
+  projects on it, each with a display name, description, and identity.
 
 ## Developing
 

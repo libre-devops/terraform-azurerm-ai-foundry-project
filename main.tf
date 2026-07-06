@@ -5,10 +5,13 @@
 # cognitive-account module). The parent account id is passed in and parsed for the resource group and
 # subscription.
 #
-# The project is managed with azapi rather than azurerm_cognitive_account_project: that resource's
-# delete uses an ETag If-Match precondition, and the Foundry account keeps reconciling the project's
-# ETag, so deleting shortly after create fails with 412 IfMatchPreconditionFailed. azapi's
-# unconditional delete avoids that.
+# The project is managed with azapi rather than azurerm_cognitive_account_project because of a
+# delete race in the Cognitive Services RP: the project delete is an async cascade that does its own
+# ETag-conditional writes, and the Foundry account keeps reconciling the project, so a delete soon
+# after create can fail with 412 IfMatchPreconditionFailed regardless of what the client sends
+# (hashicorp/terraform-provider-azurerm#32614). azapi lets us neutralise it the same way Microsoft's
+# AVM AI Foundry pattern module does: send a wildcard If-Match and retry the delete while the race
+# still surfaces (see delete_headers and retry on the resource).
 locals {
   account             = provider::azurerm::parse_resource_id(var.cognitive_account_id)
   resource_group_name = local.account.resource_group_name
@@ -38,6 +41,15 @@ resource "azapi_resource" "this" {
       type         = identity.value.type
       identity_ids = identity.value.identity_ids
     }
+  }
+
+  # The RP's async project delete can race the account's reconciler and 412 with
+  # IfMatchPreconditionFailed (see the header comment). Wildcard If-Match neutralises the front-door
+  # precondition and the retry re-issues the delete (backoff, until the delete timeout) when the
+  # RP-internal race still surfaces. Same mitigation as Microsoft's AVM AI Foundry pattern module.
+  delete_headers = { "If-Match" = "*" }
+  retry = {
+    error_message_regex = ["IfMatchPreconditionFailed"]
   }
 
   # Export the computed fields the outputs surface.
