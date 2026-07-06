@@ -15,7 +15,7 @@ module "tags" {
   owner           = "platform@example.com"
   deployed_branch = var.deployed_branch
   deployed_repo   = var.deployed_repo
-  additional_tags = { Application = "terraform-azurerm-ai-foundry-project" }
+  additional_tags = { Application = "terraform-azapi-ai-foundry-project" }
 }
 
 module "rg" {

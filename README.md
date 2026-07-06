@@ -17,10 +17,10 @@
 Azure AI Foundry projects created under an AIServices Cognitive account: the modern, project-based
 Foundry, not the legacy Machine Learning hub.
 
-[![CI](https://github.com/libre-devops/terraform-azurerm-ai-foundry-project/actions/workflows/ci.yml/badge.svg)](https://github.com/libre-devops/terraform-azurerm-ai-foundry-project/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/libre-devops/terraform-azurerm-ai-foundry-project?sort=semver&label=release)](https://github.com/libre-devops/terraform-azurerm-ai-foundry-project/releases/latest)
+[![CI](https://github.com/libre-devops/terraform-azapi-ai-foundry-project/actions/workflows/ci.yml/badge.svg)](https://github.com/libre-devops/terraform-azapi-ai-foundry-project/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/libre-devops/terraform-azapi-ai-foundry-project?sort=semver&label=release)](https://github.com/libre-devops/terraform-azapi-ai-foundry-project/releases/latest)
 [![Terraform Registry](https://img.shields.io/badge/registry-libre--devops-7B42BC?logo=terraform&logoColor=white)](https://registry.terraform.io/namespaces/libre-devops)
-[![License](https://img.shields.io/github/license/libre-devops/terraform-azurerm-ai-foundry-project)](./LICENSE)
+[![License](https://img.shields.io/github/license/libre-devops/terraform-azapi-ai-foundry-project)](./LICENSE)
 
 ---
 
@@ -71,7 +71,7 @@ module "cognitive_account" {
 }
 
 module "ai_foundry_project" {
-  source  = "libre-devops/ai-foundry-project/azurerm"
+  source  = "libre-devops/ai-foundry-project/azapi"
   version = "~> 4.0"
 
   cognitive_account_id = module.cognitive_account.ids["ais-ldo-uks-prd-001"]
